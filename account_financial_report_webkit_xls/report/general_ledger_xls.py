@@ -16,7 +16,6 @@ _column_sizes = [
     ('period', 12),
     ('move', 20),
     ('journal', 12),
-    ('operating_unit',12),
     ('account_code', 12),
     ('partner', 30),
     ('ref', 30),
@@ -81,8 +80,8 @@ class GeneralLedgerXls(report_xls):
             ('df', 3, 0, 'text', _p.filter_form(data) ==
              'filter_date' and _('Dates Filter') or _('Periods Filter')),
             ('af', 1, 0, 'text', _('Accounts Filter')),
-            ('tm', 3, 0, 'text', _('Target Moves')),
-            ('ib', 3, 0, 'text', _('Initial Balance')),
+            ('tm', 2, 0, 'text', _('Target Moves')),
+            ('ib', 2, 0, 'text', _('Initial Balance')),
 
         ]
         row_data = self.xls_row_template(c_specs, [x[0] for x in c_specs])
@@ -110,8 +109,8 @@ class GeneralLedgerXls(report_xls):
             ('df', 3, 0, 'text', df),
             ('af', 1, 0, 'text', _p.accounts(data) and ', '.join(
                 [account.code for account in _p.accounts(data)]) or _('All')),
-            ('tm', 3, 0, 'text', _p.display_target_move(data)),
-            ('ib', 3, 0, 'text', initial_balance_text[
+            ('tm', 2, 0, 'text', _p.display_target_move(data)),
+            ('ib', 2, 0, 'text', initial_balance_text[
              _p.initial_balance_mode]),
         ]
         row_data = self.xls_row_template(c_specs, [x[0] for x in c_specs])
@@ -145,7 +144,6 @@ class GeneralLedgerXls(report_xls):
             ('period', 1, 0, 'text', _('Period'), None, c_hdr_cell_style),
             ('move', 1, 0, 'text', _('Entry'), None, c_hdr_cell_style),
             ('journal', 1, 0, 'text', _('Journal'), None, c_hdr_cell_style),
-            ('operating_unit', 1, 0, 'text', _('Operating Unit'), None, c_hdr_cell_style),
             ('account_code', 1, 0, 'text',
              _('Account'), None, c_hdr_cell_style),
             ('partner', 1, 0, 'text', _('Partner'), None, c_hdr_cell_style),
@@ -215,7 +213,7 @@ class GeneralLedgerXls(report_xls):
                     cumul_balance_curr = init_balance.get(
                         'init_balance_currency') or 0.0
                     c_specs = [('empty%s' % x, 1, 0, 'text', None)
-                               for x in range(8)]
+                               for x in range(7)]
                     c_specs += [
                         ('init_bal', 1, 0, 'text', _('Initial Balance')),
                         ('counterpart', 1, 0, 'text', None),
@@ -230,7 +228,7 @@ class GeneralLedgerXls(report_xls):
                         c_specs += [
                             ('curr_bal', 1, 0, 'number', cumul_balance_curr,
                              None, c_init_cell_style_decimal),
-                            ('curr_code', 1, 0, 'text', None),
+                            ('curr_code', 1, 0, 'text', account.currency_id.name, None),
                         ]
                     row_data = self.xls_row_template(
                         c_specs, [x[0] for x in c_specs])
@@ -264,7 +262,6 @@ class GeneralLedgerXls(report_xls):
                          line.get('period_code') or ''),
                         ('move', 1, 0, 'text', line.get('move_name') or ''),
                         ('journal', 1, 0, 'text', line.get('jcode') or ''),
-                        ('operating_unit', 1, 0, 'text', line.get('operating_unit') or ''),
                         ('account_code', 1, 0, 'text', account.code),
                         ('partner', 1, 0, 'text',
                          line.get('partner_name') or ''),
@@ -293,17 +290,17 @@ class GeneralLedgerXls(report_xls):
                     row_pos = self.xls_write_row(
                         ws, row_pos, row_data, ll_cell_style)
 
-                debit_start = rowcol_to_cell(row_start, 10)
-                debit_end = rowcol_to_cell(row_pos - 1, 10)
+                debit_start = rowcol_to_cell(row_start, 9)
+                debit_end = rowcol_to_cell(row_pos - 1, 9)
                 debit_formula = 'SUM(' + debit_start + ':' + debit_end + ')'
-                credit_start = rowcol_to_cell(row_start, 11)
-                credit_end = rowcol_to_cell(row_pos - 1, 11)
+                credit_start = rowcol_to_cell(row_start, 10)
+                credit_end = rowcol_to_cell(row_pos - 1, 10)
                 credit_formula = 'SUM(' + credit_start + ':' + credit_end + ')'
-                balance_debit = rowcol_to_cell(row_pos, 10)
-                balance_credit = rowcol_to_cell(row_pos, 11)
+                balance_debit = rowcol_to_cell(row_pos, 9)
+                balance_credit = rowcol_to_cell(row_pos, 10)
                 balance_formula = balance_debit + '-' + balance_credit
                 c_specs = [
-                    ('acc_title', 9, 0, 'text',
+                    ('acc_title', 8, 0, 'text',
                      ' - '.join([account.code, account.name])),
                     ('cum_bal', 1, 0, 'text',
                      _('Cumulated Balance on Account'),
@@ -320,9 +317,12 @@ class GeneralLedgerXls(report_xls):
                         c_specs += [('curr_bal', 1, 0, 'number',
                                      cumul_balance_curr, None,
                                      c_hdr_cell_style_decimal)]
+                        #tamabahan hariri
+                        c_specs += [('curr_code', 1, 0, 'text',
+                                     account.currency_id.name,None)]
                     else:
                         c_specs += [('curr_bal', 1, 0, 'text', None)]
-                    c_specs += [('curr_code', 1, 0, 'text', None)]
+                        c_specs += [('curr_code', 1, 0, 'text', None)]
                 row_data = self.xls_row_template(
                     c_specs, [x[0] for x in c_specs])
                 row_pos = self.xls_write_row(
